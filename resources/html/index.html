@@ -10,13 +10,13 @@
       <div>
         <div
           id="controls"
-          :style="{ visibility: outputs.length > 0 || stopCodeExecutionButtonVisibility ? 'visible' : 'hidden' }"
+          :style="{ visibility: outputs.length > 0 || stopCodeExecutionButtonVisibility || historyOpen ? 'visible' : 'hidden' }"
         >
           <!-- Left side: Search bar -->
           <div id="left-controls">
             <input
               class="search-input"
-              x-show="showSearchBar"
+              x-show="showSearchBar && !historyOpen"
               x-ref="searchInput"
               x-model="searchText"
               type="text"
@@ -24,9 +24,21 @@
             />
           </div>
 
-          <!-- Right side: Loading spinner, Stop and Clear buttons -->
+          <!-- Right side: Buttons -->
           <div id="right-controls">
-            <!-- Stop Button (unchanged shape, but color is applied via CSS) -->
+            <!-- History Button -->
+            <button
+              class="history-button"
+              :class="{ 'active': historyOpen }"
+              title="Execution History"
+              @click="toggleHistory()"
+            >
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path fill="currentColor" d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C148 97.1 183.7 80 224 80c97.2 0 176 78.8 176 176s-78.8 176-176 176c-54.4 0-103-24.7-135.2-63.4c-8.3-10-23.2-11.3-33.2-3s-11.3 23.2-3 33.2C94.4 449.6 155.5 480 224 480c132.5 0 240-107.5 240-240S356.5 0 224 0C153.4 0 90.4 31.3 48.7 80.7L75 75zM224 160c-13.3 0-24 10.7-24 24V296c0 8.1 4.1 15.7 10.9 20.2l80 56c10.8 7.6 25.6 5 33.2-5.8s5-25.6-5.8-33.2L248 283.3V184c0-13.3-10.7-24-24-24z"/>
+              </svg>
+            </button>
+
+            <!-- Stop Button -->
             <button
               class="stop-button"
               :style="{ visibility: stopCodeExecutionButtonVisibility ? 'visible' : 'hidden' }"
@@ -40,14 +52,14 @@
               >
                 <path
                   fill="currentColor"
-                  d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 
+                  d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7
                        64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7
                        -64-64V128z"
                 />
               </svg>
             </button>
 
-            <!-- Clear Button with FA “Regular” Trash Can icon -->
+            <!-- Clear Button -->
             <button
               :style="{ visibility: outputs.length > 0 ? 'visible' : 'hidden' }"
               class="clear-button"
@@ -68,14 +80,56 @@
           </div>
         </div>
 
-        <div x-ref="outputContainer" class="output-container">
+        <!-- History Panel -->
+        <div x-show="historyOpen" class="history-panel">
+          <div class="history-header">
+            <span class="history-title">Execution History</span>
+            <button class="history-clear-btn" @click="clearHistory()" title="Clear all history">
+              <svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path fill="currentColor" d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="history-list" x-ref="historyList">
+            <div x-show="historyEntries.length === 0" class="history-empty">
+              No executions recorded yet.
+            </div>
+            <template x-for="entry in historyEntries" :key="entry.id">
+              <div
+                class="history-item"
+                :class="{ 'history-item-error': entry.isError }"
+                @click="restoreEntry(entry)"
+              >
+                <div class="history-item-header">
+                  <span class="history-item-file" x-text="entry.scriptPath.split('/').pop()"></span>
+                  <span class="history-item-duration" x-text="formatDuration(entry.durationMs)"></span>
+                </div>
+                <div class="history-item-meta">
+                  <span class="history-item-time" x-text="formatTime(entry.timestamp)"></span>
+                  <span class="history-item-status" :class="{ 'status-error': entry.isError, 'status-ok': !entry.isError }" x-text="entry.isError ? 'ERROR' : 'OK'"></span>
+                </div>
+                <div class="history-item-actions">
+                  <button class="history-delete-btn" @click.stop="deleteEntry(entry.id)" title="Delete entry">
+                    <svg class="icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                      <path fill="currentColor" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Output Container -->
+        <div x-show="!historyOpen" x-ref="outputContainer" class="output-container">
           <div
             x-show="outputs.length === 0"
             id="default-screen"
             class="default-screen"
           >
-            <div class="typing">Laravel Runner</div>
+            <div class="typing">Laravel Tinker</div>
             <p class="shortcut">Press <b>Ctrl + Alt + R</b> to run the file</p>
+            <p class="credit">Based on <b>Laravel Runner</b> by ali-raza-saleem</p>
           </div>
           <template x-for="(output, index) in outputs" :key="index">
             <div>
@@ -103,11 +157,20 @@
                     </button>
                   <code :class="{'error': output.isError}" class="output-element-content" x-text="output.content">
                   </code>
-                  
+
                 </pre>
               </div>
             </div>
           </template>
+        </div>
+
+        <!-- Restored script viewer -->
+        <div x-show="restoredScript" class="restored-script-panel">
+          <div class="restored-header">
+            <span x-text="'Script: ' + restoredScriptPath"></span>
+            <button class="close-restored-btn" @click="restoredScript = null">Close</button>
+          </div>
+          <pre class="restored-code"><code x-text="restoredScript"></code></pre>
         </div>
       </div>
     </div>

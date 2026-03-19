@@ -30,23 +30,21 @@ body {
   display: inline-block;
   overflow: hidden;
   text-align: left;
-  width: 0ch; /* Start from 0 characters */
+  width: 0ch;
   animation:
-    typing 1.5s steps(22, end) forwards,
+    typing 1.5s steps(14, end) forwards,
     blink 1s infinite;
 }
 
-/* Typing Animation */
 @keyframes typing {
   from {
     width: 0ch;
-  } /* Start with no characters visible */
+  }
   to {
     width: 14ch;
-  } /* Adjust this value based on text length */
+  }
 }
 
-/* Cursor Blink Effect */
 @keyframes blink {
   50% {
     border-color: transparent;
@@ -59,28 +57,32 @@ body {
   opacity: 0.7;
 }
 
-/* Ensure controls remain at the top */
+.credit {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  opacity: 0.4;
+}
+
+/* Controls bar */
 #controls {
   position: sticky;
   top: 0;
   left: 0;
   z-index: 100;
-  background: #252526; /* Background so content does not overlap */
+  background: #252526;
   padding: 0.5em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Slight shadow to separate from content */
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Left side (Search) */
 #left-controls {
   display: flex;
   align-items: center;
   gap: 0.5em;
 }
 
-/* Right side (Loader + Buttons) */
 #right-controls {
   display: flex;
   align-items: center;
@@ -95,7 +97,6 @@ body {
   color: #ffffff;
 }
 
-/* Remove background from buttons and let the icon color stand out */
 button {
   background: transparent;
   border: none;
@@ -107,14 +108,13 @@ button {
   justify-content: center;
 }
 
-/* Color each icon individually */
-/* Default Stop Button Styling */
+/* Stop Button */
 .stop-button {
-  border: 1.5px solid #444; /* Darker gray border for better contrast */
+  border: 1.5px solid #444;
   background-color: #444;
   cursor: pointer;
-  padding: 0.6em; /* Balanced padding for square shape */
-  border-radius: 6px; /* Slightly rounded edges */
+  padding: 0.6em;
+  border-radius: 6px;
   align-items: center;
   justify-content: center;
   transition:
@@ -122,22 +122,46 @@ button {
     background 0.3s ease-in-out;
 }
 
-/* Default Icon Color */
 .stop-button .icon {
-  color: #d32f2f; /* Default red */
+  color: #d32f2f;
   transition:
     color 0.3s ease-in-out,
     border-color 0.3s ease-in-out;
 }
 
-/* Hover Effect */
 .stop-button:hover {
   background-color: #313030;
-  border-color: #ff5252; /* Lighter red on hover */
+  border-color: #ff5252;
 }
 
 .stop-button:hover .icon {
-  color: #ff5252; /* Lighter red */
+  color: #ff5252;
+}
+
+/* History Button */
+.history-button {
+  border: 1.5px solid #444;
+  background-color: #333;
+  padding: 0.6em;
+  border-radius: 6px;
+  transition:
+    border-color 0.3s ease-in-out,
+    background 0.3s ease-in-out;
+}
+
+.history-button .icon {
+  color: #8ab4f8;
+  transition: color 0.3s ease-in-out;
+}
+
+.history-button:hover {
+  background-color: #3a3a3a;
+  border-color: #8ab4f8;
+}
+
+.history-button.active {
+  background-color: #2a3a5a;
+  border-color: #8ab4f8;
 }
 
 .clear-button .icon {
@@ -145,13 +169,24 @@ button {
 }
 
 .clear-button:hover .icon {
-  color: #d32f2f; /* Red */
+  color: #d32f2f;
 }
 
-/* Common icon sizing; fill is "currentColor" from the color property above */
 .icon {
   width: 20px;
   height: 20px;
+  fill: currentColor;
+}
+
+.icon-sm {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.icon-xs {
+  width: 12px;
+  height: 12px;
   fill: currentColor;
 }
 
@@ -160,6 +195,10 @@ pre {
   word-wrap: break-word;
   border-radius: 5px;
   margin-bottom: 1em;
+  background: #282c34;
+  position: relative;
+  padding-left: 1em;
+  padding-right: 1em;
 }
 
 code {
@@ -170,7 +209,7 @@ code {
   background-color: rgb(103, 58, 183, 0.5);
   color: #f5f5f5;
 }
-/* "Show Log Details" button at bottom-right of .output-wrapper */
+
 .show-log-btn {
   position: absolute;
   bottom: 1rem;
@@ -182,6 +221,7 @@ code {
   cursor: pointer;
   border-radius: 3px;
 }
+
 .show-log-btn:hover {
   background-color: #555;
 }
@@ -243,13 +283,6 @@ code {
   color: #abb2bf !important;
 }
 
-pre {
-  background: #282c34;
-  position: relative;
-  padding-left: 1em;
-  padding-right: 1em;
-}
-
 .output-element {
   display: flex;
   flex-flow: column;
@@ -262,4 +295,187 @@ pre {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* ── History Panel ── */
+.history-panel {
+  background: #1e1e1e;
+  height: calc(100vh - 4em);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75em 1em;
+  background: #252526;
+  border-bottom: 1px solid #333;
+}
+
+.history-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #8ab4f8;
+}
+
+.history-clear-btn {
+  padding: 4px 8px;
+  color: #888;
+  transition: color 0.2s;
+}
+
+.history-clear-btn:hover {
+  color: #d32f2f;
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5em;
+}
+
+.history-empty {
+  text-align: center;
+  color: #666;
+  padding: 3em 1em;
+  font-size: 0.9rem;
+}
+
+.history-item {
+  background: #282c34;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  margin-bottom: 0.4em;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+  position: relative;
+}
+
+.history-item:hover {
+  background: #2c3440;
+  border-color: #8ab4f8;
+}
+
+.history-item-error {
+  border-left: 3px solid #f87171;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2em;
+}
+
+.history-item-file {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #e0e0e0;
+}
+
+.history-item-duration {
+  font-size: 0.75rem;
+  color: #888;
+  font-family: monospace;
+}
+
+.history-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-item-time {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.history-item-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.status-ok {
+  background: #1b3a2a;
+  color: #4ade80;
+}
+
+.status-error {
+  background: #3a1b1b;
+  color: #f87171;
+}
+
+.history-item-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.history-item:hover .history-item-actions {
+  opacity: 1;
+}
+
+.history-delete-btn {
+  padding: 2px 4px;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.history-delete-btn:hover {
+  color: #f87171;
+}
+
+/* ── Restored Script Panel ── */
+.restored-script-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 40vh;
+  background: #1a1d23;
+  border-top: 2px solid #8ab4f8;
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.restored-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5em 1em;
+  background: #252526;
+  font-size: 0.8rem;
+  color: #8ab4f8;
+  position: sticky;
+  top: 0;
+}
+
+.close-restored-btn {
+  background: #444;
+  color: #eee;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.close-restored-btn:hover {
+  background: #555;
+}
+
+.restored-code {
+  margin: 0;
+  padding: 1em;
+  font-size: 0.85rem;
 }

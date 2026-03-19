@@ -9,7 +9,6 @@ export class CodeLensProvider implements vscode.CodeLensProvider {
   private running = false;
 
   constructor() {
-    /* subscribe once, auto-refresh on change */
     eventBus.on("scriptRunning", (state) => {
       this.running = state;
       this._onDidChange.fire();
@@ -21,15 +20,18 @@ export class CodeLensProvider implements vscode.CodeLensProvider {
     _tok: vscode.CancellationToken,
   ): vscode.CodeLens[] {
     const ws = vscode.workspace.getWorkspaceFolder(doc.uri);
-    if (!ws) return [];
+    if (!ws) {
+      return [];
+    }
 
     const playgroundFolder =
       vscode.workspace
-        .getConfiguration("laravelRunner")
+        .getConfiguration("laravelTinker")
         .get<string>("playgroundFolder") ?? ".playground";
 
-    if (!doc.uri.fsPath.startsWith(path.join(ws.uri.fsPath, playgroundFolder)))
+    if (!doc.uri.fsPath.startsWith(path.join(ws.uri.fsPath, playgroundFolder))) {
       return [];
+    }
 
     const range = new vscode.Range(0, 0, 0, 0);
     const lenses = [];
@@ -37,19 +39,26 @@ export class CodeLensProvider implements vscode.CodeLensProvider {
     if (this.running) {
       lenses.push(
         new vscode.CodeLens(range, {
-          title: "■ Stop PHP File",
-          command: "myExtension.stopPhpFile",
+          title: "$(debug-stop) Stop Execution",
+          command: "laravelTinker.stopPhpFile",
         }),
       );
     } else {
       lenses.push(
         new vscode.CodeLens(range, {
-          title: "▶ Run PHP File (Laravel Runner)",
-          command: "myExtension.runPhpFile",
+          title: "$(play) Run (Laravel Tinker)",
+          command: "laravelTinker.runPhpFile",
           arguments: [doc.uri],
         }),
       );
+      lenses.push(
+        new vscode.CodeLens(range, {
+          title: "$(history) History",
+          command: "laravelTinker.showHistory",
+        }),
+      );
     }
+
     return lenses;
   }
 }

@@ -1,9 +1,9 @@
 {
-  "name": "laravel-runner",
-  "displayName": "Laravel Runner",
-  "description": " Run Laravel in VS Code —color-coded output, highlighted search & stop execution. A Laravel playground and tinker for developers.",
-  "version": "4.5.1",
-  "publisher": "ali-raza-saleem",
+  "name": "laravel-tinker-unofficial",
+  "displayName": "Laravel Tinker (Unofficial)",
+  "description": "Run Laravel Tinker in VS Code with color-coded output, execution history, and custom PHP runtime support. Based on laravel-runner by ali-raza-saleem (https://github.com/ali-raza-saleem/laravel-runner).",
+  "version": "1.0.0",
+  "publisher": "mdrbx",
   "icon": "resources/icons/logo.png",
   "galleryBanner": {
     "color": "#0e1425",
@@ -11,13 +11,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ali-raza-saleem/laravel-runner.git"
-  },
-  "bugs": {
-    "url": "https://github.com/ali-raza-saleem/laravel-runner/issues"
+    "url": "https://github.com/mdrbx/laravel-tinker-unofficial.git"
   },
   "license": "MIT",
-  "homepage": "https://laravelrunner.com",
+  "homepage": "https://github.com/mdrbx/laravel-tinker-unofficial",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -29,26 +26,22 @@
     "tinker",
     "tinker runner",
     "laravel playground",
-    "tinkerwell",
-    "run laravel",
-    "run laravel code",
     "laravel tinker",
-    "lara runner",
     "laravel code runner",
     "laravel repl",
-    "debug laravel",
     "run php code",
-    "php repl",
     "php runner",
     "laravel runner",
-    "artisan tinker"
+    "artisan tinker",
+    "sail",
+    "docker"
   ],
   "activationEvents": [
     "onLanguage:php",
-    "onCommand:myExtension.runPhpFile",
-    "onCommand:myExtension.clearOutput",
-    "onCommand:myExtension.focusSearchBar",
-    "onCommand:myExtension.installPlayground"
+    "onCommand:laravelTinker.runPhpFile",
+    "onCommand:laravelTinker.clearOutput",
+    "onCommand:laravelTinker.focusSearchBar",
+    "onCommand:laravelTinker.installPlayground"
   ],
   "main": "./dist/extension.min.js",
   "files": [
@@ -62,64 +55,101 @@
   "contributes": {
     "commands": [
       {
-        "command": "myExtension.runPhpFile",
-        "title": "Run PHP File"
+        "command": "laravelTinker.runPhpFile",
+        "title": "Laravel Tinker: Run PHP File"
       },
       {
-        "command": "myExtension.stopPhpFile",
-        "title": "Stop PHP File"
+        "command": "laravelTinker.stopPhpFile",
+        "title": "Laravel Tinker: Stop PHP File"
       },
       {
-        "command": "myExtension.clearOutput",
-        "title": "Clear Output"
+        "command": "laravelTinker.clearOutput",
+        "title": "Laravel Tinker: Clear Output"
       },
       {
-        "command": "myExtension.focusSearchBar",
-        "title": "Focus Search Bar"
+        "command": "laravelTinker.focusSearchBar",
+        "title": "Laravel Tinker: Focus Search Bar"
       },
       {
-        "command": "myExtension.installPlayground",
-        "title": "Laravel Runner: Install"
+        "command": "laravelTinker.installPlayground",
+        "title": "Laravel Tinker: Install Playground"
+      },
+      {
+        "command": "laravelTinker.showHistory",
+        "title": "Laravel Tinker: Show History"
+      },
+      {
+        "command": "laravelTinker.clearHistory",
+        "title": "Laravel Tinker: Clear History"
       }
     ],
     "keybindings": [
       {
         "key": "ctrl+alt+r",
-        "command": "myExtension.runPhpFile",
+        "command": "laravelTinker.runPhpFile",
         "when": "editorLangId == php"
       },
       {
         "key": "ctrl+alt+c",
-        "command": "myExtension.clearOutput",
+        "command": "laravelTinker.clearOutput",
         "when": "editorLangId == php || webviewFocus"
       },
       {
         "key": "ctrl+alt+f",
-        "command": "myExtension.focusSearchBar",
+        "command": "laravelTinker.focusSearchBar",
+        "when": "editorLangId == php || webviewFocus"
+      },
+      {
+        "key": "ctrl+alt+h",
+        "command": "laravelTinker.showHistory",
         "when": "editorLangId == php || webviewFocus"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "myExtension.installPlayground",
+          "command": "laravelTinker.installPlayground",
           "when": "workspaceFolderCount > 0",
           "group": "navigation"
         }
       ]
     },
     "configuration": {
-      "title": "Laravel Runner",
+      "title": "Laravel Tinker (Unofficial)",
       "properties": {
-        "laravelRunner.playgroundFolder": {
+        "laravelTinker.playgroundFolder": {
           "type": "string",
           "default": ".playground",
-          "description": "The folder inside the Laravel project where PHP files can be executed. Should be inside laravel project root directory."
+          "description": "The folder inside the Laravel project where PHP files can be executed."
         },
-        "laravelRunner.appendOutput": {
+        "laravelTinker.appendOutput": {
           "type": "boolean",
           "default": true,
-          "description": "preserve output from previous runs and append new output, else clear output from previous runs."
+          "description": "Preserve output from previous runs and append new output."
+        },
+        "laravelTinker.phpCommand": {
+          "type": "string",
+          "default": "php",
+          "description": "The command used to run PHP. Examples: 'php', 'sail php', 'docker-compose exec app php'."
+        },
+        "laravelTinker.historyEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable execution history stored in a local JSON database."
+        },
+        "laravelTinker.historyMaxEntries": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum number of history entries to keep."
+        },
+        "laravelTinker.historyMaxSizeMb": {
+          "type": "number",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 2000,
+          "description": "Maximum total size of history database in megabytes."
         }
       }
     }

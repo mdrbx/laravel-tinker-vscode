@@ -41,6 +41,58 @@ document.addEventListener("alpine:init", () => {
     debouncedSearch: null,
     debouncedSearchDelayInMilliSeconds: 200,
 
+    // History state
+    historyOpen: false,
+    historyEntries: [],
+    restoredScript: null,
+    restoredScriptPath: "",
+
+    toggleHistory() {
+      this.historyOpen = !this.historyOpen;
+      if (this.historyOpen) {
+        this.restoredScript = null;
+        this.vscode.postMessage({ command: "requestHistory" });
+      }
+    },
+
+    restoreEntry(entry) {
+      this.historyOpen = false;
+      this.restoredScript = entry.scriptContent;
+      this.restoredScriptPath = entry.scriptPath;
+
+      this.$nextTick(() => {
+        this.addNewOutput(entry.output, entry.isError, false);
+      });
+    },
+
+    deleteEntry(id) {
+      this.vscode.postMessage({ command: "deleteHistoryEntry", id: id });
+    },
+
+    clearHistory() {
+      this.historyEntries = [];
+      this.vscode.postMessage({ command: "requestClearHistory" });
+    },
+
+    formatDuration(ms) {
+      if (ms < 1000) {
+        return ms + "ms";
+      }
+      return (ms / 1000).toFixed(1) + "s";
+    },
+
+    formatTime(isoString) {
+      const d = new Date(isoString);
+      const pad = (n) => String(n).padStart(2, "0");
+      return (
+        pad(d.getDate()) + "/" +
+        pad(d.getMonth() + 1) + " " +
+        pad(d.getHours()) + ":" +
+        pad(d.getMinutes()) + ":" +
+        pad(d.getSeconds())
+      );
+    },
+
     syncOutputElements() {
       this.outputElements = Array.from(
         this.$refs.outputContainer.querySelectorAll(".output-element"),
@@ -59,6 +111,8 @@ document.addEventListener("alpine:init", () => {
         this.stopCodeExecutionButtonVisibility = false;
       }
       if (message.command === "updateOutput") {
+        this.historyOpen = false;
+        this.restoredScript = null;
         this.addNewOutput(
           message.content,
           message.isError,
@@ -71,6 +125,17 @@ document.addEventListener("alpine:init", () => {
       if (message.command === "focusSearchBar") {
         this.$refs.searchInput.focus();
       }
+      if (message.command === "historyList") {
+        this.historyEntries = message.entries;
+      }
+      if (message.command === "restoreHistory") {
+        this.historyOpen = false;
+        this.restoredScript = message.entry.scriptContent;
+        this.restoredScriptPath = message.entry.scriptPath;
+        this.$nextTick(() => {
+          this.addNewOutput(message.entry.output, message.entry.isError, false);
+        });
+      }
     },
 
     handleKeyboardShortcuts(event) {
@@ -82,6 +147,9 @@ document.addEventListener("alpine:init", () => {
         }
         if (key === "f") {
           this.$refs.searchInput.focus();
+        }
+        if (key === "h") {
+          this.toggleHistory();
         }
       }
     },
@@ -99,7 +167,6 @@ document.addEventListener("alpine:init", () => {
 
       this.showSearchBar = true;
 
-      // IMPORTANT: We wait for outputs to clear in next DOM update
       this.$nextTick(() => {
         this.outputs.push(output);
         this.$nextTick(() => {
@@ -121,7 +188,6 @@ document.addEventListener("alpine:init", () => {
 
       this.highlightOutput(lastOutput);
 
-      // We don't want to scroll to the first element
       const isFirstElement = this.outputElements.length === 1;
       if (isFirstElement) {
         return;
@@ -150,7 +216,6 @@ document.addEventListener("alpine:init", () => {
         .then(() => {
           output.outputCopied = true;
 
-          // Revert after 1.5 seconds
           setTimeout(() => {
             output.outputCopied = false;
           }, 1500);
@@ -186,25 +251,19 @@ document.addEventListener("alpine:init", () => {
 
       const instance = new Mark(outputContainer);
 
-      // Unmark previous highlights before applying new ones
       instance.unmark({
         done: () => {
           if (!this.searchText) return;
 
-          // 1) Escape any regex-relevant characters in the search string
           const escapedSearch = this.escapeRegExp(this.searchText);
-
-          // 2) Build a global, case-insensitive regular expression
           const regex = new RegExp(escapedSearch, "gi");
 
-          // 3) Highlight the regex in the output container
           instance.markRegExp(regex, {
             className: "highlight",
             accuracy: "exactly",
             separateWordSearch: false,
-            acrossElements: true, // <-- Important for code blocks
+            acrossElements: true,
             done: () => {
-              // 4) Scroll to first highlight once marking is done
               const highlightedElements =
                 outputContainer.querySelectorAll(".highlight");
               if (highlightedElements.length > 0) {

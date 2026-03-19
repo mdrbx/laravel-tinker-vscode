@@ -9,30 +9,18 @@ export class WebviewManager {
   private extensionUri: vscode.Uri;
   private cachedHtml: string | null = null;
 
-  /**
-   * Constructor initializes WebviewManager with extensionUri.
-   * @param extensionUri The extension's URI.
-   */
   constructor(context: vscode.ExtensionContext) {
     this.extensionUri = context.extensionUri;
   }
 
-  /**
-   * Updates the existing WebView panel with new content or creates one if needed.
-   * The new output is sent to the WebView panel.
-   * @param content The output content to display.
-   * @param isError Whether it's an error message.
-   * @param isRunning Whether script is currently running.
-   */
   public updateWebView(
     content: string,
     isError: boolean = false,
     isRunning: boolean = false,
-  ) {
+  ): void {
     this.createOutputPanel();
     const appendOutput = Config.getInstance().get<boolean>("appendOutput");
 
-    // ✅ Send message to WebView to update content and show/hide controls
     this.outputPanel.webview.postMessage({
       command: "updateOutput",
       content,
@@ -42,25 +30,40 @@ export class WebviewManager {
     });
   }
 
-  public sendScriptStartedMessage() {
+  public sendScriptStartedMessage(): void {
     this.createOutputPanel();
     this.outputPanel.webview.postMessage({ command: "scriptStarted" });
   }
 
-  public sendScriptKilledMessage() {
+  public sendScriptKilledMessage(): void {
     this.createOutputPanel();
     this.outputPanel.webview.postMessage({ command: "scriptKilled" });
   }
 
-  public createOutputPanel() {
+  public sendHistoryEntries(entries: any[]): void {
+    this.createOutputPanel();
+    this.outputPanel.webview.postMessage({
+      command: "historyList",
+      entries,
+    });
+  }
+
+  public restoreHistoryEntry(entry: any): void {
+    this.createOutputPanel();
+    this.outputPanel.webview.postMessage({
+      command: "restoreHistory",
+      entry,
+    });
+  }
+
+  public createOutputPanel(): void {
     if (!this.outputPanel) {
       this.outputPanel = vscode.window.createWebviewPanel(
-        "laraRunOutputPanel",
-        "Laravel Runner: Output Panel",
+        "laravelTinkerOutput",
+        "Laravel Tinker: Output",
         {
-          // ← object, not enum
           viewColumn: vscode.ViewColumn.Beside,
-          preserveFocus: true, // ← keep focus in the PHP editor
+          preserveFocus: true,
         },
         { enableScripts: true },
       );
@@ -69,15 +72,11 @@ export class WebviewManager {
 
       this.outputPanel.onDidDispose(() => {
         this.outputPanel = null;
+        this.cachedHtml = null;
       });
     }
   }
 
-  /**
-   * Retrieves the WebView content.7
-   * @param webview The VSCode WebView instance.
-   * @returns The HTML content string.
-   */
   private getContent(webview: vscode.Webview): string {
     if (this.cachedHtml) {
       return this.cachedHtml;
@@ -95,8 +94,6 @@ export class WebviewManager {
     this.cachedHtml = fs
       .readFileSync(htmlPath, "utf8")
       .replace(
-        // App
-
         /\{\{appJsUri\}\}/g,
         getResourceUri("dist/app.min.js").toString(),
       )
@@ -104,7 +101,6 @@ export class WebviewManager {
         /\{\{appCssUri\}\}/g,
         getResourceUri("dist/app.min.css").toString(),
       )
-
       .replace(
         /\{\{highlightCssUri\}\}/g,
         getResourceUri("assets/css/atom-one-dark.min.css").toString(),

@@ -5,6 +5,10 @@ export class Config {
   private packageJson: any;
   private playgroundFolder: string;
   private appendOutput: boolean;
+  private phpCommand: string;
+  private historyEnabled: boolean;
+  private historyMaxEntries: number;
+  private historyMaxSizeMb: number;
   private extensionId: string;
 
   private constructor(context: vscode.ExtensionContext) {
@@ -14,28 +18,18 @@ export class Config {
     this.loadConfig();
 
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("laravelRunner")) {
+      if (event.affectsConfiguration("laravelTinker")) {
         this.loadConfig();
       }
     });
   }
 
-  /**
-   * Initializes the Config class with context.
-   * Must be called once in `activate()`.
-   * @param context VSCode extension context
-   */
   public static init(context: vscode.ExtensionContext): void {
     if (!this.instance) {
       this.instance = new Config(context);
     }
   }
 
-  /**
-   * Gets the singleton instance of Config.
-   * Ensures `init()` has been called before access.
-   * @returns Config instance
-   */
   public static getInstance(): Config {
     if (!this.instance) {
       throw new Error(
@@ -45,37 +39,30 @@ export class Config {
     return this.instance;
   }
 
-  /**
-   * Loads user configuration from `settings.json` (VS Code workspace settings).
-   */
-  private loadConfig() {
-    const config = vscode.workspace.getConfiguration("laravelRunner");
-    this.playgroundFolder = config.get<string>(
-      "playgroundFolder",
-      ".playground",
-    );
-    this.appendOutput = config.get<boolean>("appendOutput");
+  private loadConfig(): void {
+    const config = vscode.workspace.getConfiguration("laravelTinker");
+    this.playgroundFolder = config.get<string>("playgroundFolder", ".playground");
+    this.appendOutput = config.get<boolean>("appendOutput", true);
+    this.phpCommand = config.get<string>("phpCommand", "php");
+    this.historyEnabled = config.get<boolean>("historyEnabled", true);
+    this.historyMaxEntries = config.get<number>("historyMaxEntries", 500);
+    this.historyMaxSizeMb = config.get<number>("historyMaxSizeMb", 200);
   }
 
-  /**
-   * Get a value from `package.json`.
-   * @param key The key inside `package.json`.
-   * @returns The value or `undefined` if not found.
-   */
   public get<T>(key: string): T | undefined {
     const classPropertyValue = (this as any)[key];
-    if (classPropertyValue) {
+    if (classPropertyValue !== undefined) {
       return classPropertyValue;
     }
 
-    const keys = key.split("."); // Support for nested keys like "customConfig.someKey"
+    const keys = key.split(".");
     let value: any = this.packageJson;
 
     for (const k of keys) {
       if (value?.[k] !== undefined) {
         value = value[k];
       } else {
-        return undefined; // Return undefined if key is not found
+        return undefined;
       }
     }
 

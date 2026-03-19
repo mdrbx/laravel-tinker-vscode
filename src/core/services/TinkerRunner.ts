@@ -1,7 +1,9 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import { spawn, ChildProcess } from "child_process";
 import { WebviewManager } from "./WebviewManager";
+import { HistoryManager } from "./HistoryManager";
 import { Config } from "../utils/Config";
 import { PathUtils } from "../utils/PathUtils";
 import { eventBus } from "./EventBus";
@@ -13,7 +15,6 @@ export class TinkerRunner {
   private config: Config;
   private pathUtils: PathUtils;
   private tinkerScriptPath: string;
-  private registeredStopExecutionListener: boolean = false;
   private stopListenerFor: vscode.Webview | null = null;
 
   constructor(
@@ -26,20 +27,16 @@ export class TinkerRunner {
     Config.init(context);
     this.config = Config.getInstance();
 
-    PathUtils.init(this.config); // Initialize PathUtils singleton
+    PathUtils.init(this.config);
     this.pathUtils = PathUtils.getInstance();
 
     this.tinkerScriptPath = this.config.get("customConfig.tinkerScriptPath");
   }
 
-  /**
-   * Runs the given PHP file using the Tinker script and captures all output.
-   * @param fileUri The URI of the PHP file to run.
-   */
   public runPhpFile(): void {
     if (this.currentProcess) {
       vscode.window.showWarningMessage(
-        "Code is running. Please wait.. If you want to run another code, please stop the current run by pressing Stop button",
+        "Code is running. Please wait or stop the current execution.",
       );
       return;
     }
@@ -66,19 +63,39 @@ export class TinkerRunner {
       this.tinkerScriptPath,
     );
 
-    this.currentProcess = this.evalScript(
-      "php",
-      [tinkerScriptAbsolutePath, phpFileRelativePath, workspaceRoot],
+    const phpCommand = this.config.get<string>("phpCommand") || "php";
+    const phpCommandParts = phpCommand.split(/\s+/);
+    const command = phpCommandParts[0];
+    const commandArgs = [
+      ...phpCommandParts.slice(1),
+      tinkerScriptAbsolutePath,
+      phpFileRelativePath,
       workspaceRoot,
+    ];
+
+    const scriptContent = this.readFileContent(phpFileUri.fsPath);
+    const startTime = Date.now();
+
+    this.currentProcess = this.evalScript(
+      command,
+      commandArgs,
+      workspaceRoot,
+      phpFileRelativePath,
+      scriptContent,
+      startTime,
     );
 
     eventBus.setRunning(true);
   }
 
-  /**
-   * Retrieves the currently active PHP file URI if available.
-   * @returns The URI of the active PHP file, or null if none is found.
-   */
+  private readFileContent(filePath: string): string {
+    try {
+      return fs.readFileSync(filePath, "utf8");
+    } catch {
+      return "";
+    }
+  }
+
   private getPhpFileUri(): vscode.Uri | null {
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && activeEditor.document.languageId === "php") {
@@ -107,7 +124,7 @@ export class TinkerRunner {
       !this.pathUtils.fileIsInsideTinkerPlayground(workspaceRoot, phpFileUri)
     ) {
       vscode.window.showErrorMessage(
-        "This command can only be run on PHP files inside a Laravel project.",
+        "This command can only be run on PHP files inside the playground folder.",
       );
       return false;
     }
@@ -115,21 +132,15 @@ export class TinkerRunner {
     return true;
   }
 
-  /**
-   * Executes a shell command and captures output.
-   * @param command The command to run.
-   * @param args Arguments for the command.
-   * @param cwd The working directory for the command.
-   */
   private evalScript(
     command: string,
     args: string[],
     cwd: string,
+    scriptPath: string,
+    scriptContent: string,
+    startTime: number,
   ): ChildProcess {
     this.webviewManager.sendScriptStartedMessage();
-    // IMPORTANT: Must be registered after the WebView is created (only first time)
-    // since it is attached on outputPanel webview, latter is null before
-
     this.registerStopExecutionListener();
 
     const process = spawn(command, args, { cwd });
@@ -143,7 +154,10 @@ export class TinkerRunner {
       this.currentProcess = null;
       eventBus.setRunning(false);
 
-      if (code !== 0) {
+      const durationMs = Date.now() - startTime;
+      const isError = code !== 0;
+
+      if (isError) {
         this.webviewManager.updateWebView(
           output || `Process exited with code ${code}`,
           true,
@@ -152,24 +166,46 @@ export class TinkerRunner {
       } else {
         this.webviewManager.updateWebView(output || "null", false, false);
       }
+
+      this.saveToHistory(scriptPath, scriptContent, output, isError, durationMs);
     });
 
     process.on("error", (err) => {
-      this.webviewManager.updateWebView(
-        output || `Error running script: ${err.message}`,
-        true,
-        false,
-      );
+      const durationMs = Date.now() - startTime;
+      const errorOutput = output || `Error running script: ${err.message}`;
+
+      this.webviewManager.updateWebView(errorOutput, true, false);
       this.currentProcess = null;
       eventBus.setRunning(false);
       vscode.window.showErrorMessage(`Error running script: ${err.message}`);
+
+      this.saveToHistory(scriptPath, scriptContent, errorOutput, true, durationMs);
     });
 
     return process;
   }
 
-  public registerStopExecutionListener() {
-    /* always ensure a panel exists */
+  private saveToHistory(
+    scriptPath: string,
+    scriptContent: string,
+    output: string,
+    isError: boolean,
+    durationMs: number,
+  ): void {
+    const historyEnabled = this.config.get<boolean>("historyEnabled");
+    if (!historyEnabled) {
+      return;
+    }
+
+    try {
+      const history = HistoryManager.getInstance();
+      history.addEntry(scriptPath, scriptContent, output, isError, durationMs);
+    } catch {
+      // Silently fail - history is non-critical
+    }
+  }
+
+  public registerStopExecutionListener(): void {
     if (!this.webviewManager.outputPanel) {
       this.webviewManager.createOutputPanel();
     }
@@ -177,17 +213,16 @@ export class TinkerRunner {
     const panel = this.webviewManager.outputPanel!;
     const webview = panel.webview;
 
-    /* same webview already wired → nothing to do */
-    if (this.stopListenerFor === webview) return;
+    if (this.stopListenerFor === webview) {
+      return;
+    }
 
-    /* new / different webview → attach listener */
     webview.onDidReceiveMessage((message) => {
       if (message.command === "stopExecution") {
         this.stopExecution();
       }
     });
 
-    /* when the panel is disposed, forget the reference so we re-wire next time */
     panel.onDidDispose(() => {
       if (this.stopListenerFor === webview) {
         this.stopListenerFor = null;
@@ -197,22 +232,19 @@ export class TinkerRunner {
     this.stopListenerFor = webview;
   }
 
-  /**
-   * Stops the currently running PHP process.
-   */
   public stopExecution(): void {
-    this.currentProcess.kill("SIGTERM"); // ✅ Terminate the process gracefully
-    this.currentProcess = null;
-
-    // ✅ Update WebView to hide loader & stop button
-    this.webviewManager.sendScriptKilledMessage();
+    if (this.currentProcess) {
+      this.currentProcess.kill("SIGTERM");
+      this.currentProcess = null;
+      this.webviewManager.sendScriptKilledMessage();
+    }
   }
 
-  public getConfig() {
+  public getConfig(): Config {
     return this.config;
   }
 
-  public getPathUtils() {
+  public getPathUtils(): PathUtils {
     return this.pathUtils;
   }
 }
