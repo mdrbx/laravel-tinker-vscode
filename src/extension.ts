@@ -6,6 +6,7 @@ import { TinkerRunner } from "./core/services/TinkerRunner";
 import { HistoryManager, HistoryEntry } from "./core/services/HistoryManager";
 import { Config } from "./core/utils/Config";
 import { PathUtils } from "./core/utils/PathUtils";
+import { eventBus } from "./core/services/EventBus";
 
 export class ExtensionManager {
   private webviewManager: WebviewManager;
@@ -24,6 +25,14 @@ export class ExtensionManager {
   public activate(): void {
     this.registerProviders();
     this.registerCommands();
+    this.registerContextState();
+  }
+
+  private registerContextState(): void {
+    vscode.commands.executeCommand("setContext", "laravelTinker.isRunning", false);
+    eventBus.on("scriptRunning", (running) => {
+      vscode.commands.executeCommand("setContext", "laravelTinker.isRunning", running);
+    });
   }
 
   private registerProviders(): void {
@@ -219,7 +228,7 @@ export class ExtensionManager {
           }
 
           const helloUri = vscode.Uri.file(
-            path.join(playgroundPath, "hello.php"),
+            path.join(playgroundPath, "sample.php"),
           );
           let doc: vscode.TextDocument | undefined;
 
@@ -242,7 +251,7 @@ export class ExtensionManager {
           }
 
           vscode.window.showInformationMessage(
-            `Playground ready at ${playgroundFolder}/hello.php`,
+            `Playground ready at ${playgroundFolder}/sample.php`,
           );
         } catch {
           vscode.window.showErrorMessage(

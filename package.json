@@ -56,11 +56,13 @@
     "commands": [
       {
         "command": "laravelTinker.runPhpFile",
-        "title": "Laravel Tinker: Run PHP File"
+        "title": "Laravel Tinker: Run PHP File",
+        "icon": "$(play)"
       },
       {
         "command": "laravelTinker.stopPhpFile",
-        "title": "Laravel Tinker: Stop PHP File"
+        "title": "Laravel Tinker: Stop PHP File",
+        "icon": "$(debug-stop)"
       },
       {
         "command": "laravelTinker.clearOutput",
@@ -85,7 +87,7 @@
     ],
     "keybindings": [
       {
-        "key": "ctrl+alt+r",
+        "key": "ctrl+r",
         "command": "laravelTinker.runPhpFile",
         "when": "editorLangId == php"
       },
@@ -106,6 +108,18 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "laravelTinker.runPhpFile",
+          "when": "editorLangId == php && !laravelTinker.isRunning",
+          "group": "navigation"
+        },
+        {
+          "command": "laravelTinker.stopPhpFile",
+          "when": "editorLangId == php && laravelTinker.isRunning",
+          "group": "navigation"
+        }
+      ],
       "commandPalette": [
         {
           "command": "laravelTinker.installPlayground",
@@ -119,7 +133,7 @@
       "properties": {
         "laravelTinker.playgroundFolder": {
           "type": "string",
-          "default": ".playground",
+          "default": ".tinker",
           "description": "The folder inside the Laravel project where PHP files can be executed."
         },
         "laravelTinker.appendOutput": {

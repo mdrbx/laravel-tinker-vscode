@@ -25,8 +25,9 @@ export class HistoryManager {
 
   private constructor(context: vscode.ExtensionContext, config: Config) {
     this.config = config;
-    this.dbPath = path.join(context.globalStorageUri.fsPath, "history.json");
-    this.ensureStorageDir(context.globalStorageUri.fsPath);
+    const storageDir = context.storageUri.fsPath;
+    this.ensureStorageDir(storageDir);
+    this.dbPath = path.join(storageDir, "history.json");
   }
 
   public static init(context: vscode.ExtensionContext, config: Config): void {
