@@ -27,7 +27,7 @@ export class CodeLensProvider implements vscode.CodeLensProvider {
     const playgroundFolder =
       vscode.workspace
         .getConfiguration("laravelTinker")
-        .get<string>("playgroundFolder") ?? ".playground";
+        .get<string>("playgroundFolder") ?? ".tinker";
 
     if (!doc.uri.fsPath.startsWith(path.join(ws.uri.fsPath, playgroundFolder))) {
       return [];

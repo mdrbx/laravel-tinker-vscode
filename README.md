@@ -1,9 +1,19 @@
 # Laravel Tinker (Unofficial)
 
-[![Version](https://img.shields.io/badge/version-v1.0.2-8ab4f8?style=flat-square)](https://github.com/mdrbx/laravel-tinker-vscode/releases)
-[![License](https://img.shields.io/badge/license-MIT-8ab4f8?style=flat-square)](https://github.com/mdrbx/laravel-tinker-vscode/blob/master/LICENSE)
+<p align="center">
+  <img src="resources/icons/logo.png" width="128" alt="Laravel Tinker (Unofficial)">
+</p>
 
-Run Laravel Tinker scripts directly in VS Code with color-coded output, execution history, and custom PHP runtime support.
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=mdrbx.laravel-tinker-vscode"><img src="https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?style=flat-square&logo=visualstudiocode" alt="VS Code Marketplace"></a>
+  <a href="https://github.com/mdrbx/laravel-tinker-vscode/releases"><img src="https://img.shields.io/badge/version-v1.0.3-8ab4f8?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/mdrbx/laravel-tinker-vscode/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-8ab4f8?style=flat-square" alt="License"></a>
+</p>
+
+<p align="center">
+  <strong>Run Laravel code directly in VS Code.</strong><br>
+  Color-coded output, execution history, and first-class Docker/Sail support.
+</p>
 
 > Based on [laravel-runner](https://github.com/ali-raza-saleem/laravel-runner) by Ali Raza Saleem.
 
@@ -11,40 +21,74 @@ Run Laravel Tinker scripts directly in VS Code with color-coded output, executio
 
 ## Quick Start
 
-1. Open the Command Palette: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>
-2. Run **Laravel Tinker: Install Playground** — creates a `.tinker/sample.php` file in your project
-3. Hit the play button in the editor title bar or press <kbd>Ctrl</kbd> + <kbd>R</kbd>
+```
+1.  Ctrl + Shift + P  →  "Laravel Tinker: Install"
+2.  Open .tinker/sample.php
+3.  Ctrl + R  or  click ▶ in the editor title bar
+```
+
+That's it. Output appears in a side panel with syntax highlighting.
 
 ---
 
-## Features
+## Why this fork?
 
-**Run & stop** — Execute PHP files from a dedicated playground folder. Stop long-running scripts with a single click.
+| Feature | laravel-runner | **This extension** |
+|---|:---:|:---:|
+| Color-coded output | Yes | Yes |
+| Search & highlight | Yes | Yes |
+| Stop execution | Yes | Yes |
+| **Custom PHP runtime** (Sail, Docker) | — | Yes |
+| **Execution history** (browse, restore) | — | Yes |
+| **Play/Stop in editor title bar** | — | Yes |
+| **Per-workspace history isolation** | — | Yes |
 
-**Custom PHP runtime** — Use `php`, `sail php`, `docker-compose exec app php`, or any command you need. Configure it once in settings.
+---
 
-**Execution history** — Every run is saved to a local JSON database, scoped per workspace. Browse, restore, or delete past executions. Configurable limits (default: 500 entries / 200 MB).
+## Docker & Sail support
 
-**Color-coded output** — Syntax-highlighted results with error detection. Searchable output with live highlighting.
+Works out of the box with any PHP runtime. Just set your command in settings:
 
-**IntelliSense** — Real `.php` files, full support from Intelephense, PHP CS Fixer, Copilot, and any other PHP extension.
+```jsonc
+// Laravel Sail
+"laravelTinker.phpCommand": "sail php"
 
-**Smart activation** — Only loads inside Laravel projects (auto-detects `artisan`).
+// Docker Compose
+"laravelTinker.phpCommand": "docker-compose exec app php"
+
+// Any custom command
+"laravelTinker.phpCommand": "ssh server php"
+```
+
+The extension handles path mapping automatically — no extra configuration needed.
+
+---
+
+## Execution History
+
+Every run is saved locally, scoped per workspace. Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>H</kbd> or click the clock icon to:
+
+- Browse past executions with timestamps and duration
+- Restore any previous output with one click
+- View the script that produced each result
+- Delete individual entries or clear all history
+
+Configurable limits keep storage in check (default: 500 entries / 200 MB).
 
 ---
 
 ## Settings
 
-All settings are under `laravelTinker.*` in VS Code settings.
+All settings live under `laravelTinker.*` in VS Code.
 
 | Setting | Default | Description |
 |---|---|---|
-| `phpCommand` | `php` | PHP command to use. Examples: `sail php`, `docker-compose exec app php` |
-| `playgroundFolder` | `.tinker` | Folder inside the project where scripts are executed |
-| `appendOutput` | `true` | Keep output from previous runs |
-| `historyEnabled` | `true` | Enable execution history |
-| `historyMaxEntries` | `500` | Max number of history entries |
-| `historyMaxSizeMb` | `200` | Max total history size in MB |
+| `phpCommand` | `php` | PHP command — `php`, `sail php`, `docker-compose exec app php`, etc. |
+| `playgroundFolder` | `.tinker` | Folder where scripts are executed (relative to project root) |
+| `appendOutput` | `true` | Keep output from previous runs visible |
+| `historyEnabled` | `true` | Save executions to local history |
+| `historyMaxEntries` | `500` | Maximum history entries to keep |
+| `historyMaxSizeMb` | `200` | Maximum history storage in MB |
 
 ---
 
@@ -53,9 +97,9 @@ All settings are under `laravelTinker.*` in VS Code settings.
 | Shortcut | Action |
 |---|---|
 | <kbd>Ctrl</kbd> + <kbd>R</kbd> | Run PHP file |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>H</kbd> | Show execution history |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd> | Clear output |
-| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> | Focus search bar |
-| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>H</kbd> | Show history |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> | Search output |
 
 All shortcuts are customizable via VS Code keybindings.
 
@@ -63,18 +107,23 @@ All shortcuts are customizable via VS Code keybindings.
 
 ## FAQ
 
-| Question | Answer |
-|---|---|
-| Will it touch my DB? | Only if your code tells it to. |
-| Does it work with Docker/Sail? | Yes. Set `phpCommand` to `sail php` or your Docker command. |
-| Where is history stored? | In VS Code's workspace storage, isolated per project. |
-| Cross-platform? | macOS, Linux, Windows, WSL, and remote SSH. |
+**Will it touch my database?**
+Only if your code tells it to. The extension just runs your PHP file through Laravel's bootstrapper.
+
+**Does it work with Docker / Sail / remote containers?**
+Yes. Set `laravelTinker.phpCommand` to your runtime command. Path mapping is handled automatically.
+
+**Where is history stored?**
+In VS Code's workspace storage directory, isolated per project. Nothing is added to your git repository.
+
+**What platforms are supported?**
+macOS, Linux, Windows, WSL, and remote SSH.
 
 ---
 
 ## Credits
 
-This extension is a fork of [laravel-runner](https://github.com/ali-raza-saleem/laravel-runner) by [Ali Raza Saleem](https://github.com/ali-raza-saleem), with added execution history, custom runtime support, and UI improvements.
+Fork of [laravel-runner](https://github.com/ali-raza-saleem/laravel-runner) by [Ali Raza Saleem](https://github.com/ali-raza-saleem), with execution history, custom runtime support, and UI improvements.
 
 ## License
 

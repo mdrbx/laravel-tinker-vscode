@@ -58,19 +58,23 @@ export class TinkerRunner {
     const phpFileRelativePath = path
       .relative(workspaceRoot, phpFileUri.fsPath)
       .replace(/\\/g, "/");
-    const tinkerScriptAbsolutePath = path.join(
-      this.extensionUri.fsPath,
-      this.tinkerScriptPath,
-    );
 
     const phpCommand = this.config.get<string>("phpCommand") || "php";
+    const isRemote = phpCommand !== "php";
+
+    const tinkerPath = isRemote
+      ? this.ensureLocalTinkerScript(workspaceRoot)
+      : path.join(this.extensionUri.fsPath, this.tinkerScriptPath);
+
+    const laravelRoot = isRemote ? "." : workspaceRoot;
+
     const phpCommandParts = phpCommand.split(/\s+/);
     const command = phpCommandParts[0];
     const commandArgs = [
       ...phpCommandParts.slice(1),
-      tinkerScriptAbsolutePath,
+      tinkerPath,
       phpFileRelativePath,
-      workspaceRoot,
+      laravelRoot,
     ];
 
     const scriptContent = this.readFileContent(phpFileUri.fsPath);
@@ -86,6 +90,21 @@ export class TinkerRunner {
     );
 
     eventBus.setRunning(true);
+  }
+
+  private ensureLocalTinkerScript(workspaceRoot: string): string {
+    const playgroundFolder = this.config.get<string>("playgroundFolder") || ".tinker";
+    const destDir = path.join(workspaceRoot, playgroundFolder);
+    const destPath = path.join(destDir, ".tinker-runner.php");
+    const sourcePath = path.join(this.extensionUri.fsPath, this.tinkerScriptPath);
+
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    fs.copyFileSync(sourcePath, destPath);
+
+    return path.join(playgroundFolder, ".tinker-runner.php").replace(/\\/g, "/");
   }
 
   private readFileContent(filePath: string): string {

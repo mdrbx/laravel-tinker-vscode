@@ -195,7 +195,7 @@ export class ExtensionManager {
         const playgroundFolder =
           vscode.workspace
             .getConfiguration("laravelTinker")
-            .get<string>("playgroundFolder") ?? ".playground";
+            .get<string>("playgroundFolder") ?? ".tinker";
 
         const playgroundPath = path.join(root, playgroundFolder);
         const playgroundUri = vscode.Uri.file(playgroundPath);

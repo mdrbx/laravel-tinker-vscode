@@ -41,7 +41,7 @@ export class Config {
 
   private loadConfig(): void {
     const config = vscode.workspace.getConfiguration("laravelTinker");
-    this.playgroundFolder = config.get<string>("playgroundFolder", ".playground");
+    this.playgroundFolder = config.get<string>("playgroundFolder", ".tinker");
     this.appendOutput = config.get<boolean>("appendOutput", true);
     this.phpCommand = config.get<string>("phpCommand", "php");
     this.historyEnabled = config.get<boolean>("historyEnabled", true);
