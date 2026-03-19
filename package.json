@@ -1,5 +1,5 @@
 {
-  "name": "laravel-tinker-unofficial",
+  "name": "laravel-tinker-vscode",
   "displayName": "Laravel Tinker (Unofficial)",
   "description": "Run Laravel Tinker in VS Code with color-coded output, execution history, and custom PHP runtime support. Based on laravel-runner by ali-raza-saleem (https://github.com/ali-raza-saleem/laravel-runner).",
   "version": "1.0.0",
@@ -11,10 +11,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mdrbx/laravel-tinker-unofficial.git"
+    "url": "https://github.com/mdrbx/laravel-tinker-vscode.git"
   },
   "license": "MIT",
-  "homepage": "https://github.com/mdrbx/laravel-tinker-unofficial",
+  "homepage": "https://github.com/mdrbx/laravel-tinker-vscode",
   "engines": {
     "vscode": "^1.90.0"
   },
