@@ -2,7 +2,7 @@
   "name": "laravel-tinker-vscode",
   "displayName": "Laravel Tinker (Unofficial)",
   "description": "Run Laravel Tinker in VS Code with color-coded output, execution history, and custom PHP runtime support. Based on laravel-runner by ali-raza-saleem (https://github.com/ali-raza-saleem/laravel-runner).",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "publisher": "mdrbx",
   "icon": "resources/icons/logo.png",
   "galleryBanner": {

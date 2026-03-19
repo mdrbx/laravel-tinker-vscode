@@ -1,6 +1,6 @@
 # Laravel Tinker (Unofficial)
 
-[![Version](https://img.shields.io/badge/version-v1.0.0-8ab4f8?style=flat-square)](https://github.com/mdrbx/laravel-tinker-vscode/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.2-8ab4f8?style=flat-square)](https://github.com/mdrbx/laravel-tinker-vscode/releases)
 [![License](https://img.shields.io/badge/license-MIT-8ab4f8?style=flat-square)](https://github.com/mdrbx/laravel-tinker-vscode/blob/master/LICENSE)
 
 Run Laravel Tinker scripts directly in VS Code with color-coded output, execution history, and custom PHP runtime support.
