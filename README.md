@@ -5,8 +5,12 @@
 </p>
 
 <p align="center">
+  <video src="https://raw.githubusercontent.com/mdrbx/laravel-tinker-vscode/master/demo/example.mp4" controls muted width="800"></video>
+</p>
+
+<p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=mdrbx.laravel-tinker-vscode"><img src="https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?style=flat-square&logo=visualstudiocode" alt="VS Code Marketplace"></a>
-  <a href="https://github.com/mdrbx/laravel-tinker-vscode/releases"><img src="https://img.shields.io/badge/version-v1.0.3-8ab4f8?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/mdrbx/laravel-tinker-vscode/releases"><img src="https://img.shields.io/badge/version-v1.0.4-8ab4f8?style=flat-square" alt="Version"></a>
   <a href="https://github.com/mdrbx/laravel-tinker-vscode/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-8ab4f8?style=flat-square" alt="License"></a>
 </p>
 
