@@ -2,7 +2,7 @@
   "name": "laravel-tinker-vscode",
   "displayName": "Laravel Tinker (Unofficial)",
   "description": "Run Laravel Tinker in VS Code with color-coded output, execution history, and custom PHP runtime support. Based on laravel-runner by ali-raza-saleem (https://github.com/ali-raza-saleem/laravel-runner).",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "mdrbx",
   "icon": "resources/icons/logo.png",
   "galleryBanner": {
@@ -87,7 +87,7 @@
     ],
     "keybindings": [
       {
-        "key": "ctrl+r",
+        "key": "ctrl+shift+r",
         "command": "laravelTinker.runPhpFile",
         "when": "editorLangId == php"
       },
@@ -144,7 +144,7 @@
         "laravelTinker.phpCommand": {
           "type": "string",
           "default": "php",
-          "description": "The command used to run PHP. Examples: 'php', 'sail php', 'docker-compose exec app php'."
+          "description": "The command used to run PHP. Examples: 'php', 'docker-compose exec laravel.test php', './vendor/bin/sail php'."
         },
         "laravelTinker.historyEnabled": {
           "type": "boolean",

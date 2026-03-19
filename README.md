@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=mdrbx.laravel-tinker-vscode"><img src="https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?style=flat-square&logo=visualstudiocode" alt="VS Code Marketplace"></a>
-  <a href="https://github.com/mdrbx/laravel-tinker-vscode/releases"><img src="https://img.shields.io/badge/version-v1.0.4-8ab4f8?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/mdrbx/laravel-tinker-vscode/releases"><img src="https://img.shields.io/badge/version-v1.0.5-8ab4f8?style=flat-square" alt="Version"></a>
   <a href="https://github.com/mdrbx/laravel-tinker-vscode/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-8ab4f8?style=flat-square" alt="License"></a>
 </p>
 
@@ -28,7 +28,7 @@
 ```
 1.  Ctrl + Shift + P  →  "Laravel Tinker: Install"
 2.  Open .tinker/sample.php
-3.  Ctrl + R  or  click ▶ in the editor title bar
+3.  Ctrl + Shift + R  or  click ▶ in the editor title bar
 ```
 
 That's it. Output appears in a side panel with syntax highlighting.
@@ -54,14 +54,14 @@ That's it. Output appears in a side panel with syntax highlighting.
 Works out of the box with any PHP runtime. Just set your command in settings:
 
 ```jsonc
-// Laravel Sail
-"laravelTinker.phpCommand": "sail php"
+// Laravel Sail (recommended)
+"laravelTinker.phpCommand": "docker-compose exec laravel.test php"
 
-// Docker Compose
+// Or via the sail script directly
+"laravelTinker.phpCommand": "./vendor/bin/sail php"
+
+// Any custom Docker setup
 "laravelTinker.phpCommand": "docker-compose exec app php"
-
-// Any custom command
-"laravelTinker.phpCommand": "ssh server php"
 ```
 
 The extension handles path mapping automatically — no extra configuration needed.
@@ -87,7 +87,7 @@ All settings live under `laravelTinker.*` in VS Code.
 
 | Setting | Default | Description |
 |---|---|---|
-| `phpCommand` | `php` | PHP command — `php`, `sail php`, `docker-compose exec app php`, etc. |
+| `phpCommand` | `php` | PHP command — `php`, `docker-compose exec laravel.test php`, `./vendor/bin/sail php`, etc. |
 | `playgroundFolder` | `.tinker` | Folder where scripts are executed (relative to project root) |
 | `appendOutput` | `true` | Keep output from previous runs visible |
 | `historyEnabled` | `true` | Save executions to local history |
@@ -100,7 +100,7 @@ All settings live under `laravelTinker.*` in VS Code.
 
 | Shortcut | Action |
 |---|---|
-| <kbd>Ctrl</kbd> + <kbd>R</kbd> | Run PHP file |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | Run PHP file |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>H</kbd> | Show execution history |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd> | Clear output |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> | Search output |
@@ -115,7 +115,7 @@ All shortcuts are customizable via VS Code keybindings.
 Only if your code tells it to. The extension just runs your PHP file through Laravel's bootstrapper.
 
 **Does it work with Docker / Sail / remote containers?**
-Yes. Set `laravelTinker.phpCommand` to your runtime command. Path mapping is handled automatically.
+Yes. Set `laravelTinker.phpCommand` to `docker-compose exec laravel.test php` for Sail projects. Path mapping is handled automatically.
 
 **Where is history stored?**
 In VS Code's workspace storage directory, isolated per project. Nothing is added to your git repository.
